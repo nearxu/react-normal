@@ -1,25 +1,17 @@
-import logo from './logo.svg';
-import './App.css';
 
-function App() {
+import { Spin } from 'antd';
+import { Suspense } from 'react';
+import { HashRouter } from 'react-router-dom';
+import RenderRouter from './router';
+import '@/styles/index.less'
+
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
-
+    <Suspense fallback={<Spin></Spin>}>
+      <HashRouter>
+        <RenderRouter></RenderRouter>
+      </HashRouter>
+    </Suspense>
+  )
+} 
 export default App;
