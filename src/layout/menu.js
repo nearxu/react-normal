@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
-import {Menu} from 'antd'
-import {menuConfig} from '@/router'
+import {Menu, Spin} from 'antd'
 import { useHistory, useLocation } from 'react-router';
 import { onFloatRoutes } from '../utils';
+import { connect } from 'react-redux';
+import {getMenus} from '@/store/actions'
 
 const { SubMenu,Item } = Menu;
 
-const Sider = () => {
+const Sider = (props) => {
+    const {getMenus} = props
     const history = useHistory()
     const location = useLocation() 
+    const [loading,setLoading] = useState(false)
+    const [menus,setMenus] = useState([])
     const [openKeys, setOpenkeys] = useState([]);
     const [selectedKeys, setSelectedKeys] = useState([]);
 
@@ -17,7 +21,46 @@ const Sider = () => {
       history.push(menu.key)
     }
 
-    const getMenus = (menus) => {
+    async function fetchMenu(){
+      setLoading(true)
+      try {
+        let response = await getMenus()
+        setMenus(response)
+        // onOpenMenu(menus)
+        setLoading(false)
+        return response
+      } catch (error) {
+        setLoading(false)
+      }
+    }
+
+    const onOpenMenu = (menus) => {
+       // *all menu open
+       const onChildKeys = (routes) =>  routes.reduce((pre,cur) => {
+        let clones = pre.concat() 
+        if(cur.children){
+          clones.push(cur.key)
+          onChildKeys(cur.children)
+        }
+        return clones
+      },[])
+
+      const openKeyArr = onChildKeys(menus)
+      setOpenkeys(openKeyArr)
+
+      // * first select key
+      const floatPaths = onFloatRoutes(menus)
+      const selectPath = floatPaths.find((path) => location.pathname === path.key)
+      setSelectedKeys(selectPath.key)
+    }
+
+     // didMount
+     useEffect(() => {
+      fetchMenu()
+    },[])
+
+    const renderMenus = (menus) => {
+
         return menus?.map(menu => {
             return menu.children ? (
                 <SubMenu key={menu.key || menu.path} title={menu.title}>
@@ -35,75 +78,28 @@ const Sider = () => {
       setOpenkeys(keys);
     };
 
-    // didMount
-    useEffect(() => {
-      // *all menu open
-      const onChildKeys = (routes) =>  routes.reduce((pre,cur) => {
-        let clones = pre.concat() 
-        if(cur.children){
-          clones.push(cur.key)
-          onChildKeys(cur.children)
-        }
-        return clones
-      },[])
-
-      const openKeyArr = onChildKeys(menuConfig)
-      setOpenkeys(openKeyArr)
-
-      // * first select key
-      const floatPaths = onFloatRoutes(menuConfig)
-      const selectPath = floatPaths.find((path) => location.pathname === path.key)
-      setSelectedKeys(selectPath.key)
-
-    },[])
 
     return (
-    <Menu
-      mode="inline"
-      theme="dark"
-      selectedKeys={selectedKeys}
-      openKeys={openKeys}
-      onOpenChange={onOpenChange}
-      className="layout-page-sider-menu"
-    >
-      {getMenus(menuConfig)}
-    </Menu>
+      <>
+      {
+        loading || !menus.length ?
+         <Spin></Spin>
+         :
+         <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={selectedKeys}
+          openKeys={openKeys}
+          onOpenChange={onOpenChange}
+          className="layout-page-sider-menu"
+        >    
+          {renderMenus(menus)}
+        </Menu>
+      }
+      </>
+    
     
     )
 }
 
-export default Sider
-
-
-// <Menu
-// onClick={handleClick}
-// style={{ width: 256 }}
-// defaultSelectedKeys={['1']}
-// defaultOpenKeys={['sub1']}
-// mode="inline"
-// >
-// <SubMenu key="sub1" icon={<MailOutlined />} title="Navigation One">
-//   <Menu.ItemGroup key="g1" title="Item 1">
-//     <Menu.Item key="1">Option 1</Menu.Item>
-//     <Menu.Item key="2">Option 2</Menu.Item>
-//   </Menu.ItemGroup>
-//   <Menu.ItemGroup key="g2" title="Item 2">
-//     <Menu.Item key="3">Option 3</Menu.Item>
-//     <Menu.Item key="4">Option 4</Menu.Item>
-//   </Menu.ItemGroup>
-// </SubMenu>
-// <SubMenu key="sub2" icon={<AppstoreOutlined />} title="Navigation Two">
-//   <Menu.Item key="5">Option 5</Menu.Item>
-//   <Menu.Item key="6">Option 6</Menu.Item>
-//   <SubMenu key="sub3" title="Submenu">
-//     <Menu.Item key="7">Option 7</Menu.Item>
-//     <Menu.Item key="8">Option 8</Menu.Item>
-//   </SubMenu>
-// </SubMenu>
-// <SubMenu key="sub4" icon={<SettingOutlined />} title="Navigation Three">
-//   <Menu.Item key="9">Option 9</Menu.Item>
-//   <Menu.Item key="10">Option 10</Menu.Item>
-//   <Menu.Item key="11">Option 11</Menu.Item>
-//   <Menu.Item key="12">Option 12</Menu.Item>
-// </SubMenu>
-// </Menu>
+export default connect((state) => ({menus:state.menus}) ,{getMenus})(Sider)

@@ -29,11 +29,5 @@
   },
   "[typescriptreact]": {
     "editor.formatOnSave": false
-  },
-  "i18n-ally.localesPaths": [
-    "src/locales"
-  ],
-  "typescript.tsserver.pluginPaths": [
-    "typescript-plugin-css-modules"
-  ]
+  }
 }

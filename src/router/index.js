@@ -2,17 +2,23 @@
 import React from "react";
 import {
     Route,
+    Redirect,
     HashRouter,
     Switch
 } from "react-router-dom";
-import LayoutPage from "../layout";
 
+import LayoutPage from "../layout";
+import Login from '@/views/login'
+import { connect } from "react-redux";
+import { Spin } from "antd";
 
 const Home = () => (<div>Home</div>)
 const Connect = () => (<div>Connect</div>)
 
 const List = () => (<div>List</div>)
 const Rich = () => (<div>Rich</div>)
+// const Login = () => (<div>Login</div>)
+
 
 // Some folks find value in a centralized route config.
 // A route config is just data. React is great at mapping
@@ -66,22 +72,30 @@ const renderComponent = (routes) => {
       // eslint-disable-next-line no-unused-vars
       return  renderComponent(route.children)
     }else {
-      return  <Route key={route.key} exact path={route.key} component={route.component} />
+      return  <Route key={route.url} exact path={route.url} component={route.component} />
     }
   })
 }
 
-const RenderRouter = () => {
+const RenderRouter = ({user,menus}) => {
+  const {token} = user
+  console.log(menus,'menus---------------');
   return (
     <HashRouter>
     <Switch>
-      <LayoutPage>
-        {renderComponent(menuConfig)}
+      <Route exact path="/login" component={Login} />
+      {
+        !token ?
+        <Redirect to="/login" />
+        :
+        <LayoutPage>
+        { menus && menus.menus ? renderComponent(menus.menus):<Spin></Spin>}
       </LayoutPage>
+      }
     </Switch>
   </HashRouter>
   )
 }
 
 
-export default RenderRouter
+export default connect((state) => ({user:state.user, menus:state.menus}),{})(RenderRouter)

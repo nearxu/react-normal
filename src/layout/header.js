@@ -1,9 +1,10 @@
 import React from 'react'
-import { Breadcrumb } from "antd";
-import {menuConfig} from '@/router'
+import { Breadcrumb, Spin } from "antd";
+
 
 import { Layout } from 'antd';
 import { useLocation } from 'react-router';
+import { connect } from 'react-redux';
 
 const { Header } = Layout;
 
@@ -35,21 +36,25 @@ const getPath = (menuList, pathname) => {
     }
   };
 
-const BreadCrumb = () => {
-   
+const BreadCrumb = ({menus}) => {
+ 
+    // if(!menus || !menus.length) {
+    //   return <div />
+    // } 
+ 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const location = useLocation()
     const {pathname} = location
-    let path = getPath(menuConfig,pathname)
+    let path = getPath(menus,pathname)
     const first = path && path[0];
     if (first && first.title.trim() !== "首页") {
       path = [{ title: "首页", key: "/dashboard" }].concat(path);
     }
-
     return (
         <div className="bread-container">
             <Breadcrumb>
                 {
-                    path.map((route) => {
+                    path && path.length ? path.map((route) => {
                       return (
                           route.title === '首页' ?
                         (
@@ -62,6 +67,8 @@ const BreadCrumb = () => {
                         )
                       )
                     })
+                    :
+                    <Spin></Spin>
                 }
             </Breadcrumb>
         </div>
@@ -72,9 +79,9 @@ const HeaderComponent = () => {
     return (
         <>
             <Header />
-            <BreadCrumb />
+            {/* <BreadCrumb /> */}
         </>
     )
 }
 
-export default HeaderComponent
+export default connect((state) => ({menus:state.menus}),{})(HeaderComponent)
